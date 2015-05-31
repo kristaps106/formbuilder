@@ -1,0 +1,159 @@
+{% extends 'layouts/sprk' %}
+{% import "/macros/th" as table %}
+
+{% block content %}
+
+    {% include 'layouts/inc/delete_confirm' %}
+
+    <div v-component="vue-grid-block" v-remote-data="{{ url_action('FormController@index') }}">
+
+        <div class="row">
+            <div class="col-lg-12">
+                <h1 class="page-header">Veidlapas</h1>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="form-group input-group">
+                    <a href="#" class="btn btn-success" role="button" data-toggle="modal" data-target="#add-item">
+                        <i class="fa fa-plus"></i>&nbsp;Pievienot veidlapu
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="form-group input-group">
+                    <input v-on="keyup:search($event) | key 13" type="search" class="form-control" placeholder="Meklēt pēc nosaukuma...">
+                    <span class="input-group-btn">
+                        <button v-on="click:searchSubmit($event)" class="btn btn-default" type="button">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {% if (session_has('message')) %}
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="alert alert-success">
+                        {{ session_get('message') }}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if (session_has('error')) %}
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="alert alert-danger">
+                        {{ session_get('error') }}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="modal fade" id="add-item" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                <h4 class="modal-title">Izvēlēties veidlapas sagatavi</h4>
+                            </div>
+                            <div class="modal-body">                                                                
+                                <div id="form-template" class="form-group overflow">
+                                    <select class="form-control select2-ajax" data-ajax--url="{{ url_action('RestController@getFormTemplates') }}" data-ajax--cache="true" data-placeholder="Meklēt pec sagataves nosaukuma" name="form-template">
+                                    </select>
+                                </div>         
+                            </div>
+                            <div class="modal-footer">
+                                <button v-on="click:createForm($event)" type="button" class="btn btn-success">Pievienot</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Aizvērt</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <ul class="nav nav-tabs">
+                            <li class="active">
+                                <a href="#" v-on="click:selectTab('all', $event)">Visas veidlapas</a>
+                            </li>
+                            <li>
+                                <a href="#" v-on="click:selectTab('active', $event)">Aktīvas</a>
+                            </li>
+                            <li id="draft">
+                                <a href="#" v-on="click:selectTab('inactive', $event)">Neaktīvas</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade in active">
+                                <div class="table-responsive">
+                                    {% raw %}
+                                        <span v-if="rows.length == 0" class="no-res"><br />Neviens ieraksts netika atrasts!</span>
+                                        <table v-if="rows.length > 0" class="table table-striped table-borderless table-hover">
+                                            <thead>
+                                                <tr>    
+                                                    {% endraw %}
+                                                    {{ table.th('f.name', 'Nosaukums') }}
+                                                    {{ table.th('f.expiry_date', 'Statuss') }}
+                                                    {{ table.th('f.need_approval', 'Apstiprināms automātiski') }}
+                                                    {{ table.th('f.start_date', 'Spēkā no') }}
+                                                    {{ table.th('f.expiry_date', 'Spēkā līdz') }}
+                                                    {{ table.th('u.firstName', 'Autors') }}
+                                                    {{ table.th('', '', false) }}
+                                                    {{ table.th('', '', false) }}
+                                                    {{ table.th('', '', false) }}
+                                                    {{ table.th('', '', false) }}
+                                                    {% raw %}
+                                                </tr>
+                                            </thead>
+                                            <tr v-repeat="rows">
+                                                <td>
+                                                    <a href="/veidlapa/labot/{{ id }}">{{ name + version }} )</a>
+                                                </td>
+                                                <td v-html="getStatus(status, true)"></td>
+                                                <td class="text-center">
+                                                    <i v-if="need_approval == true" class="fa fa-times"></i>
+                                                    <i v-if="need_approval == false" class="fa fa-check"></i>
+                                                </td>
+                                                <td>{{ getDate(start_date) }}</td>
+                                                <td>{{ getDate(expiry_date) }}</td>
+                                                <td>{{ author }}</td>
+                                                <td>
+                                                    <a href="veidlapu-sagatave/apskatit/{{ template_id }}?status={{boolStatus}}" class="btn btn-default btn-xs" role="button" title="Apskatīt">
+                                                        <i class="glyphicon glyphicon-search"></i>
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a v-show="timetable == 'regular'" href="veidlapu/dokumentu-iesniedzeji/{{ id }}" class="btn btn-default btn-xs" role="button" title="Veidlapas iesniedzēji">
+                                                        <i class="glyphicon glyphicon-user"></i>
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a href="veidlapu/aizpildijusi/{{ id }}" class="btn btn-default btn-xs" role="button" title="Veidlapu aizpildījuši">
+                                                        <i class="glyphicon glyphicon-list"></i>
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a v-on="click:deleteItem({{ id }}, $event, '/veidlapa/dzest/{{ id }}')" href="#" class="btn btn-danger btn-xs" role="button" title="Dzēst">
+                                                        <i class="glyphicon glyphicon-remove"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                        <div v-component="paginator"></div>
+                                    {% endraw %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

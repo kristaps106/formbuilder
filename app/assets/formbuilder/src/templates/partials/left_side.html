@@ -1,0 +1,18 @@
+<div class='fb-left'>
+  <ul class='fb-tabs'>
+    <li class='active'><a data-target='#addField'>Pievienot</a></li>
+    <li><a data-target='#editField'>Labot</a></li>
+    <li><a data-target='#ruleField'>Pārbaudes</a></li>
+    <li><a data-target='#calcField'>Aprēķini</a></li>
+    <li><a data-target='#formatField'>Stili</a></li>
+  </ul>
+
+  <div class='fb-tab-content'>
+    <%= Formbuilder.templates['partials/add_field']() %>
+    <%= Formbuilder.templates['partials/edit_field']() %>
+    <%= Formbuilder.templates['partials/rule_field']() %>
+    <%= Formbuilder.templates['partials/calc_field']() %>
+    <%= Formbuilder.templates['partials/format_field']() %>
+  </div>
+  <%= Formbuilder.templates['partials/save_button'](params) %>
+</div>

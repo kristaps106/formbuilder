@@ -1,0 +1,31 @@
+<div class="field-group">
+    <div style='padding-bottom:5px;' class='fb-edit-section-header'><abbr title="Izvēlieties, ja eksistē etiķetes lauks.">Etiķetes lauka teksta pielīdzinājums</abbr></div>
+    <select data-rv-value="model.<%= Formbuilder.options.mappings.LABEL_ALIGN %>">
+        <option value=""></option>
+        <option value="center">Centrēt tekstu</option>
+        <option value="left">Pielīdzinat tekstu kreisajai malai</option>
+        <option value="right">Pielīdzinat tekstu labajai malai</option>
+    </select>
+    <br />
+    <div style='padding-bottom:5px;' class='fb-edit-section-header'><abbr title="Izvēlieties teksta pielīdzinājumu galvenajam laukam.">Galvenā lauka teksta pielīdzinājums</abbr></div>
+    <select data-rv-value="model.<%= Formbuilder.options.mappings.INPUT_ALIGN %>">
+        <option value=""></option>
+        <option value="center">Centrēt tekstu</option>
+        <option value="left">Pielīdzinat tekstu kreisajai malai</option>
+        <option value="right">Pielīdzinat tekstu labajai malai</option>
+    </select>
+</div>  
+<div class="field-group">
+    <div style='padding-bottom:5px;' class='fb-edit-section-header'><abbr title="Izvēlieties, vai tiek zīmēts rāmis lauks.">Tabulas rāmju formatēšana</abbr></div>
+    <input type='checkbox' data-rv-checked='model.<%= Formbuilder.options.mappings.NOBORDER %>' style="width: auto;" /> Nezimēt etiķetes laukam rāmi<br />
+    <input type='checkbox' data-rv-checked='model.<%= Formbuilder.options.mappings.INPUT_NOBORDER %>' style="width: auto;" /> Nezimēt galvenajam laukam rāmi<br />
+</div>   
+<div class="field-group">
+    <div style='padding-bottom:5px;' class='fb-edit-section-header'><abbr title="Izvēlieties, vai laukam tiks iekrāsots fons.">Fona iekrāsošana</abbr></div>
+    <input type='checkbox' data-rv-checked='model.<%= Formbuilder.options.mappings.GREYBACKGROUND %>' style="width: auto;" /> Etiķetes lauks iekrāsojams viegli pelēkā krāsā<br />
+    <input type='checkbox' data-rv-checked='model.<%= Formbuilder.options.mappings.INPUT_GREYBACKGROUND %>' style="width: auto;" /> Galvenais lauks iekrāsojams viegli pelēkā krāsā<br />
+</div>    
+<div class="field-group">
+    <div style='padding-bottom:5px;' class='fb-edit-section-header'><abbr title="Izvēlieties, vai lauks rakstāms treknrakstā.">Burtu formatēšana</abbr></div>
+    <input type='checkbox' data-rv-checked='model.<%= Formbuilder.options.mappings.BOLD %>' style="width: auto;" /> Treknrakstā<br />
+</div>

@@ -1,0 +1,35 @@
+{% spaceless %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bakalaura darbs</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_token" content="{{ csrf_token() }}" />
+    <link rel="icon" type="image/ico" href="/assets/favicon.ico" />
+    {{ css(asset_timed('assets/stylesheets/frontend.css'))|raw }}
+    {{ js(asset_timed('assets/javascript/frontend.js'))|raw }}
+    {% block javascripts %}{% endblock %}
+    {% block stylesheets %}{% endblock %}
+    {% if getUserObject() != false %}
+        <script type="text/javascript">
+            $(function() {
+                $('body').sessionPlugin();
+            });
+        </script>
+    {% endif %}
+</head>
+<body>
+    <div id="wrapper">
+        <div id="application">
+            {% block navigation %}
+                {% include "layouts/inc/navigation" %}
+            {% endblock %}
+            <div id="page-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+{% endspaceless %}

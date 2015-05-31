@@ -1,0 +1,10 @@
+<div class="form-group text-center fb-save-button">
+    <% if (create) { %>
+        <a href="<%= viewUrl %>" class="btn btn-info" role="button">Apskatīt</a>
+    <% } %>
+    <input class="btn btn-warning js-save-form" type="submit" value="Saglabāt">
+    <% if (allowApprove) { %>
+        <input class="btn btn-success js-approve-form" type="submit" value="Apstiprināt">
+    <% } %>
+    <a href="<%= cancelUrl %>" class="btn btn-default" role="button">Aizvērt</a>
+</div>

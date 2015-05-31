@@ -1,0 +1,3 @@
+[submodule "app/assets/formbuilderder"]
+	path = app/assets/formbuilderder
+	url = https://github.com/dobtco/formbuilder.git

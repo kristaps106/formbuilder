@@ -1,0 +1,59 @@
+<div class="field-group">
+    <div class='fb-edit-section-header'>Vērtības</div>
+
+    <label>
+        <input type='checkbox' data-rv-checked='model.<%= Formbuilder.options.mappings.MULTI_SELECT %>' />
+        Atļaut atzīmēt vairākas izvēles
+    </label>
+
+    <div class='fb-edit-section-header'>No klasifikatora</div>
+    <select id="source-classifier" data-rv-value="model.<%= Formbuilder.options.mappings.CLASSIFIER %>">
+        <option value=""></option>
+        <option value="nozaru-klasifikators">Nozaru klasifikators</option>
+        <option value="ATVK">Administratīvo teritoriju un teritoriālo vienību klasifikators</option>
+        <option value="merchants">Komersanti</option>
+        <option value="years">Gadi</option>
+        <option value="periods">Periodi</option>
+    </select>
+    <script type="text/javascript">
+        $(function () {
+            $('#source-classifier').change(function () {
+                var value = $(this).val();
+                if (value != '') {
+                    $('#drowdown-custom-values').addClass('hidden');
+                }
+                if (value == '') {
+                    $('#drowdown-custom-values').removeClass('hidden');
+                }
+            });
+        });
+    </script>
+
+    <div id="drowdown-custom-values" <% if (typeof classifier !== 'undefined' && classifier != ''){ %>class="hidden"<% } %>>
+        <% if (typeof includeBlank !== 'undefined'){ %>
+          <label>
+            <input type='checkbox' data-rv-checked='model.<%= Formbuilder.options.mappings.INCLUDE_BLANK %>' />
+            Iekļaut tukšu
+          </label>
+        <% } %>
+
+        <div class='option' data-rv-each-option='model.<%= Formbuilder.options.mappings.OPTIONS %>'>
+          <input type="checkbox" class='js-default-updated' data-rv-checked="option:checked" style="width:auto" />
+          <input type="text" data-rv-input="option:value" class='option-label-input' style="width:100px;" placeholder="Vērtība" />
+          <input type="text" data-rv-input="option:label" class='option-label-input' style="width:auto" placeholder="Nosaukums" />
+          <a class="js-add-option <%= Formbuilder.options.BUTTON_CLASS %>" title="Add Option"><i class='fa fa-plus-circle'></i></a>
+          <a class="js-remove-option <%= Formbuilder.options.BUTTON_CLASS %>" title="Remove Option"><i class='fa fa-minus-circle'></i></a>
+        </div>
+
+        <% if (typeof includeOther !== 'undefined'){ %>
+          <label>
+            <input type='checkbox' data-rv-checked='model.<%= Formbuilder.options.mappings.INCLUDE_OTHER %>' />
+            Iekļaut "cits"
+          </label>
+        <% } %>
+
+        <div class='fb-bottom-add'>
+          <a class="js-add-option <%= Formbuilder.options.BUTTON_CLASS %>">Pievienot vērtību</a>
+        </div>
+    </div>
+</div>

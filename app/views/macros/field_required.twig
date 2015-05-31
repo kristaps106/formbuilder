@@ -1,0 +1,7 @@
+{% macro field_required(required) %}
+    <span class="input-group-addon">
+        {% if required %}
+            &nbsp;<span class="required"></span>
+        {% endif %}
+    </span>
+{% endmacro %}

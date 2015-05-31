@@ -1,0 +1,52 @@
+<div class="field-group">
+    <div class='fb-edit-section-header'>Pārbaudes līmenis</div>
+    <select data-rv-value="model.<%= Formbuilder.options.mappings.VALIDATION_LEVEL %>">
+        <option value=""></option>
+        <option value="required">Obligāts</option>
+        <option value="info">Informatīvs</option>
+    </select>
+    <div class='fb-edit-section-header'>Brīdinājuma teksts</div>
+    <input type="text" data-rv-input="model.<%= Formbuilder.options.mappings.VALIDATION_MESSAGE %>" />
+</div>
+<div class="field-group">
+    <input type='checkbox' data-rv-checked='model.<%= Formbuilder.options.mappings.DISABLE_UNTIL_OTHER_FIELD_FILLED %>' /> Lauku nevar aizpildīt, kamēr nav aizpildīts cits
+    <div class='fb-edit-section-header'>Saistītais lauks</div>
+    <input type="text" data-rv-input="model.<%= Formbuilder.options.mappings.DISABLE_UNTIL_OTHER_FIELD_FILLED_IDENTITY %>" />
+</div>
+<div class="field-group">
+    <input type='checkbox' data-rv-checked='model.<%= Formbuilder.options.mappings.REQUIRED_IF_OTHER_FIELD_FILLED %>' /> Lauks ir obligāti aizpildāms, ja saistīts lauks ir aizpildīts
+    <div class='fb-edit-section-header'>Saistītais lauks</div>
+    <input type="text" data-rv-input="model.<%= Formbuilder.options.mappings.REQUIRED_IF_OTHER_FIELD_FILLED_IDENTITY %>" />
+</div>
+<div class="field-group">
+    <div class='fb-edit-section-header'>Salīdzinājuma veids</div>
+    <select data-rv-value="model.<%= Formbuilder.options.mappings.COMPARISON_TYPE %>">
+        <option value=""></option>
+        <option value="equal">vienāds</option>
+        <option value="bigger">lielāks</option>
+        <option value="less">mazāks</option>
+        <option value="bigger_equal">lielāks un vienāds</option>
+        <option value="less_equal">mazāks un vienāds</option>
+    </select>
+    <div class='fb-edit-section-header'>Formula, kas atsaucas uz citiem veidlapas sagataves laukiem</div>
+    <input type="text" data-rv-input="model.<%= Formbuilder.options.mappings.COMPARISON_FORMULA %>" />
+</div>
+<div class="field-group">
+    <input type='checkbox' data-rv-checked='model.<%= Formbuilder.options.mappings.DISABLED_UNTIL_NOT_EQUAL_OTHER_FILLED_VALUE %>' /> Lauku nevar aizpildīt, kamēr citā lauka vērtība nesakrīt ar iepriekš noteiktu vērtību
+    <div class='fb-edit-section-header'>Saistītais lauks</div>
+    <input type="text" data-rv-input="model.<%= Formbuilder.options.mappings.DISABLED_UNTIL_NOT_EQUAL_OTHER_FILLED_IDENTITY %>" />
+    <div class='fb-edit-section-header'>Salīdzināt ar:</div>
+    <select data-rv-value="model.<%= Formbuilder.options.mappings.DISABLED_UNTIL_NOT_EQUAL_OTHER_FILLED_TYPE %>">
+        <option value="formula">Izteiksmi</option>
+        <option value="value">Vērtību</option>
+    </select>
+    <select data-rv-value="model.<%= Formbuilder.options.mappings.DISABLED_UNTIL_NOT_EQUAL_OTHER_FILLED_COMPARISON %>">
+        <option value=""></option>
+        <option value="equal">vienāds</option>
+        <option value="bigger">lielāks</option>
+        <option value="less">mazāks</option>
+        <option value="bigger_equal">lielāks un vienāds</option>
+        <option value="less_equal">mazāks un vienāds</option>
+    </select>
+    <input type="text" data-rv-input="model.<%= Formbuilder.options.mappings.DISABLED_UNTIL_NOT_EQUAL_OTHER_FILLED_FORMULA %>" />
+</div>

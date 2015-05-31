@@ -1,0 +1,20 @@
+<div class="modal fade" id="rejection-content" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">Noraidījuma iesmesls</h4>
+            </div>
+            <div class="modal-body">
+                {{ form_label('rejection_reason', 'Noraidījuma pamatojums') }}
+                <div v-validate="errors.rejection_reason" class="form-group">
+                    <textarea class="form-control" rows="3" name="rejection_reason"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button v-if="processForm == false" v-on="click:submitWithType('rejected', $event)" id="submit-reject-reason" type="button" class="btn btn-success">Saglabāt</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Aizvērt</button>
+            </div>
+        </div>
+    </div>
+</div>

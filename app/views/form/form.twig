@@ -1,0 +1,237 @@
+{% extends 'layouts/sprk' %}
+{% import "/macros/th" as table  %}
+{% block content %}
+
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header">Veidlapas parametri</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <ul class="breadcrumb">
+                <li><a href="{{ url_action('FormController@index') }}">Veidlapas</a></li>
+                <li class="active">{{ form.name }}</li>
+            </ul>
+        </div>
+    </div>
+
+    {% if (session_has('message')) %}
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="alert alert-success">
+                    {{ session_get('message') }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if (session_has('error')) %}
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="alert alert-danger">
+                    {{ session_get('error') }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-lg-6">
+            {{ form_open({'v-component': 'form-component', 'v-on': 'submit: submit', 'action': ['FormController@update', form.id], 'method': 'post'}) }}
+                <div v-validate="errors.name" class="form-group">
+                    {{ form_label('name', 'Nosaukums:') }}
+                    {{ form_text('name', (form.name is defined ? form.name : ''), {'class': 'form-control'}) }}
+                </div>
+                <div v-validate="errors.start_date" class="form-group">
+                    {{ form_label('start_date', 'Veidlapas stāšanās spēkā datumu:') }}
+                    {{ form_text('start_date', (form.start_date is defined ? form.start_date|date('d.m.Y') : ''), {'class': 'form-control date-picker', 'data-date-format': 'DD.MM.YYYY'}) }}
+                </div>
+                <div v-validate="errors.expiry_date" class="form-group">
+                    {{ form_label('expiry_date', 'Veidlapas derīguma termiņu:') }}
+                    {{ form_text('expiry_date', (form.expiry_date is defined ? form.expiry_date|date('d.m.Y') : ''), {'class': 'form-control date-picker', 'data-date-format': 'DD.MM.YYYY'}) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label('template', 'Veidlapas sagatave:') }}
+                    {% set text_combination = form.template ~ form.version %}
+                    {{ form_text('template', text_combination , {'class': 'form-control', 'disabled': 'disabled'}) }}
+                </div>
+                <div class="form-group">
+                    <div class="checkbox">
+                        <label>
+                            {{ form_checkbox('need_approval', true, ((form.need_approval is defined and form.need_approval) ? false : true)) }}Dokuments automātiski apstiprināms
+                        </label>
+                    </div>
+                </div>
+                <div v-validate="errors.timetable" class="form-group">
+                    <label>Iesniegšanas grafiks:</label>
+                    <div class="radio">
+                        <label>
+                            {% set isOnceChecked = (form.timetable is defined and form.timetable == 'once') ? true : false %}
+                            {{ form_radio('timetable', 'once', isOnceChecked, {'id': 'once', 'v-on': 'click: timetableChoose("once")'}) }}Vienreiz iesniedzama veidlapa
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            {% set isRegularChecked = (form.timetable is defined and form.timetable == 'regular') ? true : false %}
+                            {{ form_radio('timetable', 'regular', isRegularChecked, {'id': 'regular', 'v-on': 'click: timetableChoose("regular")'}) }}Regulāri iesniedzama veidlapa
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            {% set isOptionalChecked = (form.timetable is defined and form.timetable == 'optional') ? true : false %}
+                            {{ form_radio('timetable', 'optional', isOptionalChecked, {'id': 'optional', 'v-on': 'click: timetableChoose("optional")'}) }}pēc izvēles
+                        </label>
+                    </div>
+                </div>
+                <div class="panel panel-default{% if isOptionalChecked == true %} hidden{% endif %}">
+                    <div class="panel-heading">Iesniegšanas grafika parametri</div>
+                    <div class="panel-body">
+                        <div class="form-schedule{% if isOnceChecked  == false %} hidden{% endif %}" data-timetable="once">
+                            <div v-validate="errors.submission_date" class="form-group">
+                                {{ form_label('submission_date', 'Iesniegšanas sākuma datums:') }}
+                                {{ form_text('submission_date', (form.submission_date is defined ? form.submission_date|date('d.m.Y') : ''), {'class': 'form-control date-picker', 'data-date-format': 'DD.MM.YYYY'}) }}
+                            </div>
+                            <div v-validate="errors.deadline_date" class="form-group">
+                                {{ form_label('deadline_date', 'Iesniegšanas termiņš:') }}
+                                {{ form_text('deadline_date', (form.deadline_date is defined ? form.deadline_date|date('d.m.Y') : ''), {'class': 'form-control date-picker', 'data-date-format': 'DD.MM.YYYY'}) }}
+                            </div>
+                            <div v-validate="errors.alert_date" class="form-group">
+                                {{ form_label('alert_date', 'Brīdinājuma datums:') }}
+                                {{ form_text('alert_date', (form.alert_date is defined ? form.alert_date|date('d.m.Y') : ''), {'class': 'form-control date-picker', 'data-date-format': 'DD.MM.YYYY'}) }}
+                            </div>
+                        </div>
+                        <div class="form-schedule{% if isRegularChecked == false %} hidden{% endif %}" data-timetable="regular">
+                            <div v-validate="errors.regularity" class="form-group">
+                                <label>Iesniegšanas regularitāte:</label>
+                                <div class="radio">
+                                    <label>
+                                        {% set isOnceAYear = (form.regularity is defined and form.regularity == 'once-a-year') ? true : false %}
+                                        {{ form_radio('regularity', 'once-a-year', isOnceAYear, {}) }}reizi gadā
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        {% set isEverySixMonths = (form.regularity is defined and form.regularity == 'every-six-months') ? true : false %}
+                                        {{ form_radio('regularity', 'every-six-months', isEverySixMonths, {}) }}reizi pusgadā
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        {% set isQuarterly = (form.regularity is defined and form.regularity == 'quarterly') ? true : false %}
+                                        {{ form_radio('regularity', 'quarterly', isQuarterly, {}) }}reizi ceturksnī
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        {% set isOnceAMonth = (form.regularity is defined and form.regularity == 'once-a-month') ? true : false %}
+                                        {{ form_radio('regularity', 'once-a-month', isOnceAMonth, {}) }}reizi mēnesī
+                                    </label>
+                                </div>
+                            </div>
+                            <div v-validate="errors.submission_day" class="form-group">
+                                {{ form_label('submission_day', 'Iesniegšanas sākums:') }}
+                                {{ form_text('submission_day', (form.submission_day is defined ? form.submission_day : ''), {'class': 'form-control'}) }}
+                            </div>
+                            <div v-validate="errors.deadline_day" class="form-group">
+                                {{ form_label('deadline_day', 'Iesniegšanas termiņš:') }}
+                                {{ form_text('deadline_day', (form.deadline_day is defined ? form.deadline_day : ''), {'class': 'form-control'}) }}
+                            </div>
+                            <div v-validate="errors.alert_day" class="form-group">
+                                {{ form_label('alert_day', 'Brīdinājuma diena:') }}
+                                {{ form_text('alert_day', (form.alert_day is defined ? form.alert_day : ''), {'class': 'form-control'}) }}
+                            </div>
+                        </div>
+                        <div v-validate="errors.alert_text" class="form-group">
+                            <label>Atgādinājums par dokumenta iesniegšanu:</label>
+                            {{ form_textarea('alert_text', (form.alert_text is defined and form.alert_text is not empty ? form.alert_text : 'Uzmanību, dokuments [veidlapas-nosaukums] ir jāiesniedz līdz [iesniegsanas-termins]! Dokumenta iesniegšana: [links-uz-dokumenta-iesniegsanu]'), {'class': 'form-control', 'rows': '4'}) }}
+                            <p class="help-block">Sagataves parametri:
+                                <ul class="help-block">
+                                    <li>Nosaukums - [veidlapas-nosaukums]</li>
+                                    <li>Iesniegšanas sākuma datums - [iesniegsanas-sakuma-datums]</li>
+                                    <li>Iesniegšanas termiņš - [iesniegsanas-termins]</li>
+                                </ul>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div v-validate="errors.applicant" class="form-group">
+                    <label>Iesniedzēji:</label>
+                    <div class="radio">
+                        <label>
+                            {% set allowAnyone = (form.applicant is defined and form.applicant == 'anyone') ? true : false %}
+                            {{ form_radio('applicant', 'anyone', allowAnyone, {'id': 'applicant', 'v-on': 'click: applicantChoose("anyone")'}) }}neobligāti, jebkurš
+                        </label>
+                    </div>
+                    <div  class="radio">
+                        <label>
+                            {% set allowIndustry = (form.applicant is defined and form.applicant == 'industry') ? true : false %}
+                            {{ form_radio('applicant', 'industry', allowIndustry, {'id': 'applicant', 'v-on': 'click: applicantChoose("industry")'}) }}obligāti, nozares pārstāvji vai pakalpojuma sniedzēji
+                        </label>
+                    </div>
+                    <div v-validate="errors.industries" class="form-group validate-btn applicant-param{% if allowIndustry  == false %} hidden{% endif %}" data-applicant="industry">  
+                        <select multiple="multiple" class="form-control multiple-selected multiSelect form-select" name="industries[]">
+                            {% for industry in industries %}
+                                <option value="{{ industry.id }}" {% if industry.selected %}selected="selected"{% endif %}>{{ industry.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            {% set allowCriteria = (form.applicant is defined and form.applicant == 'criteria') ? true : false %}
+                            {{ form_radio('applicant', 'criteria', allowCriteria, {'id': 'applicant', 'v-on': 'click: applicantChoose("criteria")'}) }}obligāti, komersanti, kas atbilst noteiktiem kritērijiem
+                        </label>
+                    </div>
+                    <div v-validate="errors.criteria" class="form-group applicant-param{% if allowCriteria  == false %} hidden{% endif %}" data-applicant="criteria">
+                        <div class="input-group">
+                        {{ form_text('criteria', (form.criteria is defined ? form.criteria : ''), {'class': 'form-control', 'placeholder': 'Loģiska izteiksme...'}) }}
+
+                        <span class="input-group-btn" title="Apskatīt iesniedzēju sarakstu pēc kritērija">
+                            <button v-on="click:previewSubmitters($event)" class="btn btn-default" type="button"><i class="glyphicon glyphicon-user"></i></button>
+                        </span>
+                        </div>
+                    </div>
+                </div>
+                    
+                <div v-validate="errors.regulator" class="form-group">
+                    <label>Piesaiste nozarei:</label>
+                    <div class="radio">
+                        <label>
+                            {% set allowAnyone = (form.regulator is defined and form.regulator == 'anyone') ? true : false %}
+                            {{ form_radio('regulator', 'anyone', allowAnyone, {'id': 'regulator', 'v-on': 'click: regulatorChoose("anyone")'}) }}jebkurš
+                        </label>
+                    </div>
+                    <div  class="radio">
+                        <label>
+                            {% set allowIndustry = (form.regulator is defined and form.regulator == 'industry') ? true : false %}
+                            {{ form_radio('regulator', 'industry', allowIndustry, {'id': 'regulator', 'v-on': 'click: regulatorChoose("regulator-industry")'}) }}nozares pārstāvji vai pakalpojuma sniedzēji
+                        </label>
+                    </div>
+                    <div v-validate="errors.regulator_industries" class="form-group validate-btn regulator-param{% if allowIndustry  == false %} hidden{% endif %}" data-regulator="regulator-industry">  
+                        <select multiple="multiple" class="form-control multiple-selected multiSelect form-select" name="regulator_industries[]">
+                            {% for industry in available_regulator_industries %}
+                                <option value="{{ industry.id }}" {% if industry.selected %}selected="selected"{% endif %}>{{ industry.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div v-validate="errors.regulators_in_charge" class="form-group">
+                    <label>Atbildīgās personas:</label>
+                    <select multiple="multiple" class="form-control multiple-selected multiSelect form-select" name="regulators_in_charge[]">
+                        {% for ldap_users in ldap_user_list %}
+                            <option value="{{ ldap_users.id }}" {% if ldap_users.selected %}selected="selected"{% endif %}>{{ ldap_users.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                    
+                <div class="form-group btn-toolbar">
+                    {{ form_submit('Saglabāt', {'v-on': 'click: clear', 'class': 'btn btn-success'}) }}
+                    {{ link_to_action('FormController@index', 'Atpakaļ', {}, {'class': 'btn btn-default', 'role': 'button'}) }}
+                </div>
+            {% include 'form/modal/submiter_preview'%}
+            {{ form_close() }}
+        </div>
+    </div>
+
+{% endblock %}

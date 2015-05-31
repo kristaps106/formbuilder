@@ -1,0 +1,529 @@
+{% import "/macros/select2_merchant_info" as data  %}
+{% import "/macros/field_required" as macros_options  %}
+{% block stylesheet %}
+    {{ css(asset_timed('assets/stylesheets/table_fix.css'))|raw }}
+{% endblock %}  
+<div class="table-responsive form-builder-table" v-component="formbuilder-formulas">
+    <table class="table table-borderless">
+        <tbody>
+        {%- set user = getUserObject((as_client is defined) ? as_client : false) -%}
+        {%- set period = (period is defined) ? period : false -%}
+        {%- set group_break_start = false -%}
+        {%- set classifiers = [] -%}
+        
+        {%- if fields is defined -%}
+            {%- for mainKey, field in fields -%}
+            
+                {%- set field_type = (field.field_type is defined) ? field.field_type : '' -%}
+                {%- set select2_locked = ''-%}
+                {%- set sourceValue = '' -%}
+                {%- set definedPeriodValue = '' -%}
+                {%- if field.field_options.source_field is defined and field.field_options.source_field is not empty -%}
+                    {# Split source field string to get level of object#}
+                    {%- set objectParts = field.field_options.source_field|split('.') -%}
+                    {# Get user object #}
+                    {%- if objectParts|first == 'client' -%}
+                        {%- set sourceValue = user -%}
+                    {%- elseif objectParts|first == 'period'-%} 
+                        {%- set sourceValue = '' -%}
+                        {%- set field_type = 'period' -%}
+                        {%- if period != false and attribute(period, objectParts|last) is defined -%}
+                            {%- set definedPeriodValue = attribute(period, objectParts|last) -%}
+                            {%- set select2_locked = 'select2-locked'-%}
+                        {%- endif -%}          
+                    {%- endif -%}
+                    {# Iterate all parts to get to lovest level (string) - build dynamic object#}
+                        {%- for part in objectParts -%}
+                            {%- if sourceValue is not empty and sourceValue != false and attribute(sourceValue, part) is defined -%}
+                                {%- set sourceValue = attribute(sourceValue, part) -%}
+                            {%- endif -%}
+                        {%- endfor -%}
+                {%- endif -%}
+                
+                {%- set id = (field.identity is defined and field.identity is not empty) ? 'id="' ~ field.identity|upper ~'"' : '' -%}
+                {%- set id = (id is empty and field.cid is defined and field.cid is not empty) ? 'id="' ~ field.cid|upper ~'"' : id -%}
+                {%- set id = (id is empty) ? 'id="' ~ mainKey|upper ~'"' : id -%}
+                {%- set id = (id is empty and field.id is defined and field.id is not empty) ? 'id="' ~ field.id|upper ~'"' : id -%}
+
+                {%- set data_cell = (field.identity is defined and field.identity is not empty) ? 'data-cell="' ~ field.identity|upper ~'"' : '' -%}
+                {%- set data_cell = (data_cell is empty) and (field.cid is defined and field.cid is not empty) ? 'data-cell="' ~ field.cid|upper ~'"' : data_cell -%}
+                {%- set data_cell = (data_cell is empty) ? 'data-cell="' ~ mainKey|upper ~'"' : data_cell -%}
+                {%- set data_cell = (data_cell is empty and field.id is defined and field.id is not empty) ? 'data-cell="' ~ field.id|upper ~'"' : data_cell -%}
+
+                {# Ja dropdown vērtību norāda no klasifikatora "komersanti", tas uzstāda ajax atribūtus #}
+                {%- set ajaxAttributes = (field.field_options.classifier is defined and field.field_options.classifier == 'merchants') ? 'data-ajax--url="/rest/merchants" data-ajax--cache="true"' : '' -%}
+
+                {# Ja dropdown atzīmē "Atļaut atzīmēt vairākas izvēles" #}
+                {%- set dropdownClass = (field.field_options.multi_select is defined and field.field_options.multi_select is not empty) ? ' select2' : '' -%}
+
+                {# Ja dropdown gan klasifikatora vērtība "komersanti", gan atzīmē "Atļaut atzīmēt vairākas izvēles" #}
+                {%- set dropdownClass = (dropdownClass == ' multiple-selected' and ajaxAttributes is not empty) ? ' select2-ajax' : dropdownClass -%}
+
+                {# Ja dropdown klasifikatora vērtība "komersanti", bet neatzīmē "Atļaut atzīmēt vairākas izvēles" #}
+                {%- set dropdownClass = (dropdownClass == ' select2' and ajaxAttributes is not empty) ? ' select2-ajax' : dropdownClass -%}
+                {# Ja nav neviena klase, tad pēc noklusējuma select2 un select2-ajax ja ir ajax #}
+                {% if dropdownClass is empty %}
+                    {% if ajaxAttributes is not empty %}
+                        {%- set dropdownClass = ' select2-ajax' -%}
+                    {% else %}
+                        {%- set dropdownClass = ' select2' -%}
+                    {% endif %}
+                {% endif %}
+
+                {# Ja dropdown atzīmē "Atļaut atzīmēt vairākas izvēles", uzliekam atribūtu "multiple" #}
+                {%- set multiSelectAttr = (field.field_options.multi_select is defined and field.field_options.multi_select is not empty) ? 'multiple="multiple"' : '' -%}
+
+                {%- set isArrVar = (multiSelectAttr is not empty) ? '[]' : '' -%}
+                {%- set isArrVar = (field_type == 'checkboxes') ? '[]' : isArrVar -%}
+
+                {%- set name = (field.id is defined and field.id is not empty) ? 'name="' ~ field.id ~ isArrVar ~ '"' : '' -%}
+                {%- set name = (name is empty and field.identity is defined and field.identity is not empty) ? 'name="' ~ field.identity ~ isArrVar ~ '"' : name -%}
+                {%- set name = (name is empty and field.cid is defined and field.cid is not empty) ? 'name="' ~ field.cid ~ isArrVar ~'"' : name -%}
+                {%- set name = (name is empty) ? 'name="' ~ mainKey ~ isArrVar ~ '"' : name -%}
+                
+                {%- set format = (field.format is defined and field.format is not empty) ? 'data-format="' ~ field.format ~ '"' : '' -%}
+
+                {%- set readonly = (field.field_options.readonly is defined and field.field_options.readonly == true) ? 'readonly="readonly"' : '' -%}
+                {%- set readonly = (readonly is empty and field.field_options.disable_until_other_field_filled is defined and field.field_options.disable_until_other_field_filled == true and (field.value is not defined or field.value is empty)) ? 'readonly="readonly"' : readonly -%}
+                {%- set readonly = (readonly is empty and sourceValue is not empty and isString(sourceValue)) ? 'readonly="readonly"' : readonly -%}
+                
+                {%- set hiddenClass = (field.field_options.disabled_until_not_equal_other_filled_value is defined and field.field_options.disabled_until_not_equal_other_filled_value == true and (field.value is not defined or field.value is empty)) ? ' hidden' : '' -%}
+                
+                {%- if hiddenClass is not empty and form.id is defined -%}
+                    {%- set hiddenClass = (checkRelatedFieldFilled(field, form.id) == true) ? '' : hiddenClass -%}
+                {%- endif -%}
+                {%- set required = (field.validation_level is defined and field.validation_level == 'required') ? true : false -%}
+                
+
+                {%- set validate = (field.id is defined and field.id is not empty) ? 'v-validate="errors.' ~ field.id ~ '"' : '' -%}
+                {%- set validate = (validate is empty and field.identity is defined and field.identity is not empty) ? 'v-validate="errors.' ~ field.identity ~ '"' : validate -%}
+                {%- set validate = (validate is empty and field.cid is defined and field.cid is not empty) ? 'v-validate="errors.' ~ field.cid ~ '"' : validate -%}
+                {%- set validate = (validate is empty) ? 'v-validate="errors.' ~ mainKey ~ '"' : validate -%}
+
+                {%- set value = (field.value is defined and field.value is not empty) ? 'value="' ~ field.value ~'"' : '' -%}
+                {%- set value = (value is empty and sourceValue is not empty and isString(sourceValue)) ? 'value="' ~ sourceValue ~'"' : value -%}
+                {%- set value = (value is empty and definedPeriodValue is not empty) ? 'value="' ~ definedPeriodValue ~'"' : value -%}
+                
+                {%- set status = (form.status is defined and form.status is not empty) ? form.status : false -%}
+                {%- set control_buttons = false -%}
+                {%- set readonly = (readonly is empty and control_buttons == true) ? 'readonly="readonly"' : readonly -%}
+                {%- set disabled = (field.field_options.disabled is defined and field.field_options.disabled == true) ? 'disabled="disabled"' : '' -%}
+                
+
+                {%- set locked = (control_buttons == true) ? ' locked' : '' -%}
+                {%- set validation_control = (status == 'rejected') ? 'form-control full-height' : '' -%}
+                {%- set tooltip = (field.field_options.description is defined and field.field_options.description is not empty) ? 'data-toggle="tooltip" title="' ~ field.field_options.description ~ '"' : '' -%}
+                
+                {%- set is_field_without_label = (field_type in ['text_break', 'group_break_start', 'group_break_end', 'hidden', 'table_break']) ? true : false -%}
+                {%- set hide_label = (field.field_options.hide_label is defined and field.field_options.hide_label == true) ? true : false -%}
+
+                {%- set class = '' -%}
+                {% if status == 'rejected' %}
+                    {% if (field_type in ['radio', 'checkboxes']) %}
+                        {%- set class = 'field-accepted' -%}
+                    {% endif %}
+                    {% if list is defined and list is not empty %}
+                        {% for keys in list %}
+                            {% if keys.field_id is defined and  field.id == keys.field_id %}
+                                {%if keys.status == 'changed' %}
+                                    {%- set class = 'field-notice' -%}
+                                {% elseif keys.status == 'rejected' %}
+                                    {%- set class = 'field-rejected' -%}
+                                {% endif %}
+                                {%- set tooltip = 'data-toggle="tooltip-rejected" data-content="'~keys.reason~'"' -%}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+                
+                {%- set elem = (field.identity is defined and field.identity is not empty) ? field.identity|upper : '' -%}
+                {%- set elem = (elem is empty and field.cid is defined and field.cid is not empty) ? field.cid|upper : elem -%}
+                {%- set elem = (elem is empty) ? mainKey|upper : elem -%}
+                {%- set elem = (elem is empty and field.id is defined and field.id is not empty) ? field.id|upper : elem -%}
+                
+                {# Align class setting #}
+                {%- set label_align_attr = '' -%}
+                {%- if field.field_options.label_align is defined and field.field_options.label_align is not empty  -%}
+                    {%- set label_align_attr = 'text-align:'~field.field_options.label_align~';' -%}
+                {%- endif -%}
+                
+                {%- set input_align_attr = '' -%}
+                {%- if field.field_options.input_align is defined and field.field_options.input_align is not empty  -%}
+                    {%- set input_align_attr = 'text-align:'~field.field_options.input_align~';' -%}
+                {%- endif -%}
+                
+                {%- set integer_number = 'data-type-integer = false' -%}
+                {%- if field.field_options.integer is defined and field.field_options.integer == true  -%}
+                    {%- set integer_number = 'data-type-integer = true' -%}
+                {%- endif -%}
+                
+                {# Border class setting #}
+                {%- set border = '' -%}
+                {%- if (field.field_options.noborder is not defined) or (field.field_options.noborder is defined and field.field_options.noborder == false)  -%}
+                    {%- set border = ' bordered' -%}
+                {%- endif -%}
+                
+                {%- set input_border = '' -%}
+                {%- if (field.field_options.input_noborder is not defined) or (field.field_options.input_noborder is defined and field.field_options.input_noborder == false)  -%}
+                    {%- set input_border = ' bordered' -%}
+                {%- endif -%}
+                
+                {# Background class setting #}
+                {%- set greybackground = '' -%}
+                {%- if (field.field_options.greybackground is defined and field.field_options.greybackground == true)  -%}
+                    {%- set greybackground = ' greybackground' -%}
+                {%- endif -%}
+                
+                {%- set input_greybackground = '' -%}
+                {%- if (field.field_options.input_greybackground is defined and field.field_options.input_greybackground == true)  -%}
+                    {%- set input_greybackground = ' greybackground' -%}
+                {%- endif -%}
+            
+                {# get previous period value directive #}
+                {%- set formula = '' -%}
+                {%- set directive_get_previous_val = '' -%}
+                {%- if (field.formula is defined and field.formula is not empty) -%}
+                
+                    {%- if isJSON(field.formula) -%}
+                        {%- set ajax_formula = jsonDecode(field.formula) -%}
+                        {%- set action = (ajax_formula.action is defined and ajax_formula.action == 'getPrevPeriodVal') ? 'getPrevPeriodVal' : '' -%}
+                        {%- set step = (ajax_formula.step is defined and ajax_formula.step is not empty) ? ajax_formula.step : '' -%}
+                        {%- set target_field_id = (ajax_formula.target_field_id is defined and ajax_formula.target_field_id is not empty) ? ajax_formula.target_field_id : '' -%}
+                        {%- if action == 'getPrevPeriodVal' and period.id is defined and form_id is defined and as_client.id is defined -%}
+                            
+                            {%- set target_form_id = (ajax_formula.target_form_id is defined and ajax_formula.target_form_id is not empty) ? ajax_formula.target_form_id : form_id -%}
+                            {%- set directive_get_previous_val = 'v-get-previous-period-val="' ~elem~ '" data-target-elem="' ~target_field_id~ '" data-step-count="' ~step~ '" data-current-period="' ~period.id~ '" data-form-id="' ~target_form_id~ '" data-client-id="' ~as_client.id~ '" readonly' -%}
+                        {%- elseif action == 'getPrevPeriodVal' and period.id is not defined and form_id is defined and as_client.id is defined -%}
+                            {%- set target_form_id = (ajax_formula.target_form_id is defined and ajax_formula.target_form_id is not empty) ? ajax_formula.target_form_id : form_id -%}
+                            {%- set directive_get_previous_val = 'v-get-previous-period-val="' ~elem~ '" data-target-elem="' ~target_field_id~ '" data-step-count="' ~step~ '" data-current-period="" data-form-id="' ~target_form_id~ '" data-client-id="' ~as_client.id~ '" readonly' -%}
+                        {%- endif -%}
+                    {%- else -%}
+                        {%- set formula = 'data-formula="' ~ field.formula|upper ~ '" readonly' -%}
+                    {%- endif -%}
+                    
+                {%- endif -%}
+                
+                {# Other field filled directive #}
+                {%- set directive_other_field_filled = '' -%}
+                {%- if field.field_options.disable_until_other_field_filled is defined 
+                        and field.field_options.disable_until_other_field_filled == true 
+                        and field.field_options.disable_until_other_field_filled_identity is defined -%}
+                    {%- set directive_other_field_filled = 'v-other-field-filled="' ~elem~ '" 
+                        data-target-elem="'~field.field_options.disable_until_other_field_filled_identity~'"' -%}
+                {%- endif -%}
+                
+                {%- set directive_document_status_checker = 'v-document-status-checker="' ~elem~ '"' -%}
+                {%- if allowed_onload is defined and allowed_onload == 'true' -%}
+                    {%- set directive_document_status_checker = '' -%}
+                {%- endif -%}
+                
+                {# disabled_until_not_equal_other_filled_value directive #}
+                {%- set directive_equal_other_filled_value = '' -%}
+                {%- if field.field_options.disabled_until_not_equal_other_filled_value is defined and field.field_options.disabled_until_not_equal_other_filled_value == true and field.field_options.disabled_until_not_equal_other_filled_identity is defined and field.field_options.disabled_until_not_equal_other_filled_identity is not empty -%}
+                    {%- set filled_type = (field.field_options.disabled_until_not_equal_other_filled_type is defined) ? field.field_options.disabled_until_not_equal_other_filled_type : null -%}
+                    {%- set filled_other = (field.field_options.disabled_until_not_equal_other_filled_identity is defined) ? field.field_options.disabled_until_not_equal_other_filled_identity : null -%}
+                    {%- set filled_formula = (field.field_options.disabled_until_not_equal_other_filled_formula is defined) ? field.field_options.disabled_until_not_equal_other_filled_formula : null -%}
+                    {%- set filled_comparison = (field.field_options.disabled_until_not_equal_other_filled_comparison is defined) ? field.field_options.disabled_until_not_equal_other_filled_comparison : null -%}
+                    {%- set filled_id = elem ~ '_disabled_until_not_equal_other_filled_formula'  -%}
+                    {%- set directive_equal_other_filled_value = ' v-equal-other-filled-value="' ~elem~ '" data-filled-id="'~filled_id~'" data-filled-other="'~filled_other~'" data-operator="'~filled_comparison~'" ' -%}      
+                {%- endif -%}
+                {%- if field_type == 'table_break'-%}
+                    </tbody>
+                    </table>
+                    <table class="table table-borderless">
+                    <tbody>
+                {%- endif -%}
+                {%- if group_break_start == false -%}
+                    <tr id="{{ elem ~ '_TR' }}" class="{{ hiddenClass }}" {{directive_equal_other_filled_value}}>
+                {%- endif -%}
+                {# disabled_until_not_equal_other_filled_value hidden values must be inside tr #}
+                {%- if field.field_options.disabled_until_not_equal_other_filled_value is defined and field.field_options.disabled_until_not_equal_other_filled_value == true and field.field_options.disabled_until_not_equal_other_filled_identity is defined and field.field_options.disabled_until_not_equal_other_filled_identity is not empty -%}
+                        <td class="hidden">
+                        <span class="hidden" id="{{ filled_id }}"
+                              {%- if filled_type == 'formula' or filled_type is empty %} data-formula="{{ filled_formula }}"{% endif -%}>
+                              {%- if filled_type == 'value' -%}{{ filled_formula }}{%- endif -%}
+                        </span>
+                        </td>
+                {%- endif -%}
+                
+                {%- if field_type == 'group_break_end'-%}
+                    {%- set group_break_start = false -%}
+                {%- elseif (is_field_without_label == true and hide_label == true) -%}
+                    {%- if field_type == 'group_break_start' -%}
+                        {%- set group_break_start = true -%}
+                    {%- endif -%}
+                {%- else -%}
+                    {%- if is_field_without_label == false -%}
+                        {%- if (hide_label == false) -%}
+                            <td style="{{ label_align_attr }}" class="{{ border }}{{ greybackground }}">
+                                {%- if field.field_options.bold is defined and field.field_options.bold == true -%}<b>{%- endif -%}
+                                    {% if field.label is defined %}
+                                        {{ field.label }}
+                                    {% endif %}
+                                {%- if field.field_options.bold is defined and field.field_options.bold == true -%}</b>{%- endif -%}
+                            </td>
+                        {%- endif -%}
+                    {%- endif -%}
+                    {%- if field_type != 'hidden' -%}
+                        {% set colspan = (field.field_options.colspan is defined and field.field_options.colspan is defined is not empty) ? 'colspan="' ~ field.field_options.colspan ~ '"' : '' %}
+                        {% set rowspan = (field.field_options.rowspan is defined and field.field_options.rowspan is defined is not empty) ? 'rowspan="' ~ field.field_options.rowspan ~ '" style="vertical-align: middle;"' : '' %}
+                        
+                        {#{%- if is_field_without_label == false or hide_label == false -%}#}
+                            <td {{ validate|raw }} {{ colspan|raw }} {{ rowspan|raw }} class="{{ class }}{{ input_border }}{{ input_greybackground }}" style=" {{ label_align_attr }}">
+                        {#{%- endif -%}#}
+                    {%- endif -%}
+                        {%- if (control_buttons and print is not defined) -%}
+                            <div class="input-group">
+                        {%- endif -%}
+                        {%- if (print is defined and print == true) -%}
+                            <div>
+                        {%- endif -%}
+                        {%- if (control_buttons == false) and (field.field_options.history is defined and field.field_options.history == true) and (as_client is defined) -%}
+                            <div class="input-group">
+                        {%- endif -%}
+                            {%- if field_type == 'group_break_start' -%}
+                                {%- if (hide_label == false) -%}
+                                    {%- if field.field_options.bold is defined and field.field_options.bold == true -%}<b>{%- endif -%}
+                                        {{ field.label }}
+                                    {%- if field.field_options.bold is defined and field.field_options.bold == true -%}</b>{%- endif -%}
+                                    {%- if tooltip is not empty -%}
+                                        &nbsp;<i class="fa fa-info-circle hidden-print" {{ tooltip|raw }}></i>
+                                    {%- endif -%}
+                                {%- endif -%}
+                                {%- set group_break_start = true -%}
+                            {%- elseif field_type == 'text_break' -%}
+                                <p {{ id|raw }} {{ name|raw }} {{ formula|raw }} {{ format|raw }}>
+                                    {%- if field.label is empty -%}
+                                        &nbsp;
+                                    {%- else -%}
+                                        {%- if field.field_options.bold is defined and field.field_options.bold == true -%}<b>{%- endif -%}
+                                        {{ field.label }}
+                                        {%- if field.field_options.bold is defined and field.field_options.bold == true -%}</b>{%- endif -%}
+                                    {%- endif -%}
+                                    {%- if tooltip is not empty -%}
+                                        &nbsp;<i class="fa fa-info-circle hidden-print" {{ tooltip|raw }}></i>
+                                    {%- endif -%}
+                                </p>
+                            {%- elseif (print is defined and print == true) or (status == 'confirmed' or status == 'submitted' or status == 're-submitted') and (control_buttons == false) -%}
+                                <p style="{{ input_align_attr }}">
+                                    {%- if field_type == 'dropdown'-%}
+                                        {%- if field.value is defined and field.value is not empty -%}
+                                            {%- set arr = field.field_options.options -%}
+                                            {%- if isJSON(field.value) -%}
+                                                {%- set items = jsonDecode(field.value) -%}
+                                                {%- for item in items -%}
+                                                    {%- for key, ar in arr -%}
+                                                        {%- if (ar.value is not defined and key == item) or (ar.value is defined and ar.value == item) -%}
+                                                            {{ ar.label|replace({'-':''})|trim }}{%- if item != items|last -%},&nbsp;{%- endif -%}
+                                                        {%- endif -%}
+                                                    {%- endfor -%}
+                                                {%- endfor -%}
+                                            {%- else -%}
+                                                {% if attribute(arr, field.value) is defined %}
+                                                    {{ attribute(arr, field.value).label|replace({'-':''})|trim }}
+                                                {% else %}
+                                                    {%- for key, ar in arr -%}
+                                                        {%- if (ar.value is defined and ar.value == field.value) -%}
+                                                            {{ ar.label|replace({'-':''})|trim }}
+                                                        {%- endif -%}
+                                                    {%- endfor -%}
+                                                {%- endif -%}
+                                            {%- endif -%}
+                                        {%- endif -%}
+                                    {%- elseif field_type == 'hidden' -%}
+                                        {# nothing... #}
+                                    {%- elseif field_type == 'checkboxes' -%}
+                                        {%- for checkboxKey, option in field.field_options.options -%}
+                                            {%- if (field.value is defined and field.value is not empty and option.value is defined and option.value in jsonDecode(field.value)) -%}
+                                                {{ option.label }}
+                                                {%- if (jsonDecode(field.value)|last != option.value) -%},&nbsp;{%- endif -%}
+                                            {%- endif -%}
+                                        {%- endfor -%}
+                                    {%- elseif field_type == 'radio' -%}
+                                        {%- for radioKey, option in field.field_options.options -%}
+                                            {%- if option.value is defined and field.value is defined and option.value == field.value -%}
+                                                {{ option.label }}
+                                            {%- endif -%}
+                                        {%- endfor -%}
+                                    {%- else -%}
+                                        {# Resolve fatal error #}
+                                        {% if field.value is defined %}
+                                            {{ field.value }}
+                                        {% endif %}
+                                    {%- endif -%}
+                                </p>
+                            {%- elseif field_type == 'text' -%}
+                                <div class="input-group input-group-unstyled">
+                                    <input class="form-control{{ hiddenClass }}" type="text" {{ id|raw }} {{ disabled|raw }} {{ data_cell|raw }} {{ name|raw }} {{ formula|raw }} {{ format|raw }} {{ readonly|raw }} {{ directive_document_status_checker }} {{ directive_other_field_filled }} {{ directive_equal_other_filled_value }} {{ directive_get_previous_val }}
+                                        {%- if field.field_options.minlength is defined -%} minlenght="{{ field.field_options.minlength }}" {%- endif -%}
+                                        {%- if field.field_options.maxlength is defined -%} maxlength="{{ field.field_options.maxlength }}" {%- endif -%}
+                                        {{ value|raw }} {{ tooltip|raw }}
+                                    />
+                                    {{ macros_options.field_required(required) }}
+                                </div>
+                                <div class="spinner"></div>
+                            {%- elseif field_type == 'paragraph' -%}
+                            <div class="input-group input-group-unstyled input-textarea">
+                                <textarea {{ id|raw }} {{ data_cell|raw }} {{ name|raw }} {{ disabled|raw }} {{ formula|raw }} {{ format|raw }} {{ readonly|raw }}  {{ tooltip|raw }} class="form-control{{ hiddenClass }}" rows="3" {{ directive_other_field_filled }} {{ directive_document_status_checker }} {{ directive_equal_other_filled_value }} {{ directive_get_previous_val }}>
+                                    {%- if field.value is defined and field.value is not empty -%}
+                                        {{ field.value }}
+                                    {%- endif -%}
+                                </textarea>
+                                {{ macros_options.field_required(required) }}
+                            </div>
+                            {%- elseif field_type == 'checkboxes' -%}
+                            <div class="input-group input-group-unstyled">
+                                <div {{ id|raw }} {{ formula|raw }} {{ format|raw }} {{ readonly|raw }}  {{ tooltip|raw }} class="{{ validation_control }} checkbox{{ hiddenClass }}" {{ directive_document_status_checker }} {{ directive_other_field_filled }} {{ directive_equal_other_filled_value }} {{ directive_get_previous_val }}>
+                                    {%- for checkboxKey, option in field.field_options.options -%}
+                                            <div>
+                                                <label>                                                
+                                                    <input data-cell="{{ elem ~ checkboxKey }}" {{ name|raw }} {{ disabled|raw }} type="checkbox" value="{{ (option.value is defined) ? option.value : checkboxKey }}"
+                                                       {%- if (field.value is defined and field.value is not empty and option.value is defined and option.value in jsonDecode(field.value)) -%}checked="checked"{%- endif -%} 
+                                                    />
+                                                    {{ option.label }}
+                                                </label>
+                                            </div>
+                                    {%- endfor -%}
+                                </div>
+                                {{ macros_options.field_required(required) }}
+                            </div>
+                            {%- elseif field_type == 'radio' -%}
+                            <div class="input-group input-group-unstyled">
+                                <div {{ id|raw }} {{ formula|raw }} {{ format|raw }} {{ readonly|raw }} {{ tooltip|raw }} class="{{ validation_control }} radio{{ hiddenClass }}" {{ directive_document_status_checker }} {{ directive_other_field_filled }} {{ directive_equal_other_filled_value }} {{ directive_get_previous_val }}>
+                                    {%- for radioKey, option in field.field_options.options -%}
+                                        <div>
+                                            <label>
+                                                <input data-cell="{{ elem ~ radioKey }}" {{ disabled|raw }} type="radio" {{ name|raw }} value="{{ (option.value is defined) ? option.value : radioKey }}"
+                                                   {%- if option.value is defined and field.value is defined and option.value == field.value -%}checked="checked"{%- endif -%}
+                                                />
+                                                {{ option.label }}
+                                            </label>
+                                        </div>
+                                    {%- endfor -%}
+                                </div>
+                                {{ macros_options.field_required(required) }}
+                            </div>
+                            {%- elseif field_type == 'date' -%}
+                            <div class="input-group input-group-unstyled">
+                                <div class="form-group">
+                                    <input {{ id|raw }} {{ name|raw }} {{ formula|raw }} {{ disabled|raw }} {{ format|raw }} {{ readonly|raw }} {{ value|raw }} {{ tooltip|raw }} type='text' class="form-control date-picker{{ hiddenClass }}" data-date-format="DD.MM.YYYY" {{ directive_document_status_checker }} {{ directive_other_field_filled }} {{ directive_equal_other_filled_value }} {{ directive_get_previous_val }}/>
+                                </div>
+                                {{ macros_options.field_required(required) }}
+                            </div>
+                            {%- elseif field_type == 'time' -%}                           
+                                <div class="form-group date time-picker-{{ mainKey }}">
+                                    <input type="text" 
+                                        {{ id|raw }} {{ name|raw }} {{ formula|raw }} {{ disabled|raw }} {{ format|raw }} {{ value|raw }} {{ tooltip|raw }} {{ directive_other_field_filled }} {{ directive_document_status_checker }} {{ directive_equal_other_filled_value }} {{ directive_get_previous_val }}
+                                        class="form-control{{ hiddenClass }} input-readonly-editable " 
+                                        v-time-picker="{{ mainKey }}"                                          
+                                    />
+                                 </div>
+                            {%- elseif field_type == 'hidden' -%}
+                                <input {{ id|raw }} {{ data_cell|raw }} {{ formula|raw }} {{ format|raw }} type="hidden" value="" {{ name|raw }} {{ directive_other_field_filled }} {{ directive_equal_other_filled_value }} />
+                            {%- elseif field_type == 'dropdown' -%}
+                            <div class="input-group input-group-unstyled">
+                                <div {{ tooltip|raw }} class="mselect form-group {{ hiddenClass }}">
+                                    <select style="width: 100%" {{ ajaxAttributes|raw }} {{ multiSelectAttr|raw }} class="form-control{{ dropdownClass }} {{ locked }} {{ select2_locked }}" {{ id|raw }} {{ data_cell|raw }} {{ name|raw }} {{ formula|raw }} {{ format|raw }} {{ disabled|raw }} {{ readonly|raw }} {{ tooltip|raw }} {{ directive_document_status_checker }} {{ directive_other_field_filled }} {{ directive_equal_other_filled_value }} {{ directive_get_previous_val }}>
+
+                                                {%- set dropdownData = field.field_options.options -%}
+                                                {%- if multiSelectAttr is empty -%}
+                                                    <option value=""></option>
+                                                {%- endif -%}
+                                                {%- for dropdownKey, option in dropdownData -%}
+                                                        <option value="{{ (option.value is defined) ? option.value : dropdownKey }}"
+                                                            {%- if (field.value is defined and field.value == dropdownKey) or (field.value is defined and dropdownKey in jsonDecode(field.value) or (field.value is defined and option.value is defined and field.value == option.value)) -%}selected="selected"{%- endif -%} >
+                                                            {{ option.label }}
+                                                        </option>
+                                                {%- endfor -%}    
+
+                                    </select>
+                                </div>
+                                {{ macros_options.field_required(required) }}
+                            </div>
+                            {%- elseif field_type == 'number' -%}
+                            <div class="input-group input-group-unstyled">
+                                <input {{ id|raw }} {{ data_cell|raw }} {{ name|raw }} {{ formula|raw }} {{ disabled|raw }} {{ format|raw }} {{ readonly|raw }} {{ tooltip|raw }} {{ integer_number }} {{ directive_other_field_filled }} {{ directive_equal_other_filled_value }} {{ directive_document_status_checker }} {{ directive_get_previous_val }} class="form-control{{ hiddenClass }} number-field-{{ mainKey }}" type="text" 
+                                    {{ value|raw }}
+                                    v-number-field="{{ mainKey }}, e"
+                                />
+                                {{ macros_options.field_required(required) }}
+                            </div>
+                            {%- elseif field_type == 'website' -%}
+                            <div class="input-group input-group-unstyled">
+                                <input {{ id|raw }} {{ data_cell|raw }} {{ name|raw }} {{ formula|raw }} {{ disabled|raw }} {{ format|raw }} {{ readonly|raw }} {{ value|raw }} {{ tooltip|raw }} class="form-control{{ hiddenClass }}" name="website" type="url" {{ directive_other_field_filled }} {{ directive_equal_other_filled_value }} {{ directive_document_status_checker }} {{ directive_get_previous_val }} />
+                                {{ macros_options.field_required(required) }}
+                            </div>
+                            {%- elseif field_type == 'email' -%}
+                            <div class="input-group input-group-unstyled">
+                                <input {{ id|raw }} {{ data_cell|raw }} {{ name|raw }} {{ formula|raw }} {{ disabled|raw }} {{ format|raw }} {{ readonly|raw }} {{ value|raw }} {{ tooltip|raw }} class="form-control{{ hiddenClass }}" type="email" {{ directive_other_field_filled }} {{ directive_equal_other_filled_value }} {{ directive_document_status_checker }} {{ directive_get_previous_val }} />
+                                {{ macros_options.field_required(required) }}
+                            </div>
+                            {%- elseif field_type == 'price' -%}
+                                <div class="input-group">
+                                    <span class="input-group-addon none{{ hiddenClass }}">
+                                        <i class="fa fa-eur"></i>
+                                    </span>
+                                    <input {{ id|raw }} {{ data_cell|raw }} {{ name|raw }} {{ formula|raw }} {{ disabled|raw }} {{ format|raw }} {{ readonly|raw }} {{ value|raw }} {{ tooltip|raw }} type="text" class="form-control{{ hiddenClass }}" {{ directive_other_field_filled }} {{ directive_equal_other_filled_value }} {{ directive_document_status_checker }} {{ directive_get_previous_val }} >
+                                </div>
+                            {%- elseif field_type == 'address' -%}
+                                <input {{ id|raw }} {{ data_cell|raw }} {{ name|raw }} {{ formula|raw }} {{ disabled|raw }} {{ format|raw }} {{ readonly|raw }} {{ value|raw }} {{ tooltip|raw }} type="text" class="form-control{{ hiddenClass }}" {{ directive_other_field_filled }} {{ directive_equal_other_filled_value }} {{ directive_document_status_checker }} {{ directive_get_previous_val }} >
+                            {%- endif -%}
+                            {%- if control_buttons and (print is not defined or print == false) -%}
+                                <span class="input-group-btn hidden-print ctr-btn">
+                                    <span class='ctrl-btns hidden'>
+                                        <button v-on="click:editFormField($event)" class="btn btn-default btn-xs btn-cl-block regulator-control" type="button">
+                                            <i class="glyphicon glyphicon-pencil"></i>
+                                        </button>
+                                        <button v-on="click:showFieldHistory($event, {{ name }}, {{ field.client_id }})" class="btn btn-default btn-xs btn-cl-block regulator-control" type="button">
+                                            <i class="glyphicon glyphicon-info-sign"></i>
+                                        </button>
+                                        <button v-on="click:showRejectForm($event, {{ name }})" class="btn btn-default btn-xs btn-cl-block regulator-control" type="button" data-toggle="modal">
+                                            <i class="glyphicon glyphicon-remove-circle"></i>
+                                        </button>
+                                        <button v-on="click:okFormField($event, {{ name }})" class="btn btn-success btn-xs btn-cl-block substantiation-control hidden" type="button" id="substantiation-{{ mainKey }}">
+                                            <i class="glyphicon glyphicon-ok"></i>
+                                        </button>
+                                        <button v-on="click:cancelFormField($event)" class="btn btn-danger btn-xs btn-cl-block substantiation-control hidden" type="button">
+                                            <i class="glyphicon glyphicon-remove"></i>
+                                        </button>
+                                    </span> 
+                                    <button v-on="click:showControlButtons($event)" class="ctrl-btn btn btn-primary btn-xs btn-cl-block" type="button" data-toggle="modal">
+                                        <i class="ctrl-btn glyphicon glyphicon-cog"></i>
+                                    </button> 
+                                </span>
+                            {%- endif -%}
+                            {%- if (control_buttons == false) and (print is not defined or print == false) and (field.field_options.history is defined and field.field_options.history == true) and (as_client is defined) -%} 
+                                <span class="input-group-btn hidden-print">
+                                    <button v-on="click:showFieldHistory($event, {{ name }}, {{ as_client.id }})" class="btn btn-primary btn-xs btn-cl-block field-history" type="button">
+                                        <i class="glyphicon glyphicon-info-sign"></i>
+                                    </button>
+                                </span>
+                            {%- endif -%}
+
+                            {%- set comparison_type = (field.field_options.comparison_type is defined) ? field.field_options.comparison_type : '' -%}
+                            {%- set comparison_formula = (field.field_options.comparison_formula is defined) ? field.field_options.comparison_formula : '' -%}
+                            {%- if comparison_type is not empty -%}
+                                {%- set comparison_type_name = elem ~ '_comparison_type'  -%}
+                                {%- set comparison_formula_name = elem ~ '_comparison_formula'  -%}
+                                <input type="hidden" name="{{ comparison_type_name }}" value="{{ comparison_type }}">
+                                <input id="{{ comparison_formula_name }}" type="hidden" name="{{ comparison_formula_name }}" value="" data-formula="{{ comparison_formula }}" {{ format|raw }}>
+                            {%- endif -%}
+                        {%- if (control_buttons == false) and (field.field_options.history is defined and field.field_options.history == true) -%}
+                            </div>
+                        {%- endif -%}
+                        {%- if (control_buttons and print is not defined) -%}
+                            </div>
+                        {%- endif -%}
+                        {%- if (print is defined and print == true) -%}
+                            </div>
+                        {%- endif -%}
+                    {#{%- if is_field_without_label == false or hide_label == false -%}#}
+                        </td>
+                    {#{%- endif -%}#}                  
+                {%- endif -%}
+                {%- if group_break_start == false -%}</tr>{%- endif -%}
+            {%- endfor -%}
+        {%- endif -%}
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,47 @@
+{% extends 'layouts/sprk' %}
+{% block stylesheet %}
+    {{ css(asset_timed('assets/stylesheets/table_fix.css'))|raw }}
+{% endblock %}  
+{% block content %}
+
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header">{{ form.name }} (versija {{ form.version }})</h1>
+        </div>
+    </div>
+
+    {% if (session_has('message')) %}
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="alert alert-success">
+                    {{ session_get('message') }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-11">
+            <div class="panel panel-default" v-component="formbuilder-view-form">
+                <div class="panel-body">
+                    <div class="clearfix"></div>
+                    {{ form_open({'id': 'form-calx', 'v-component': 'formbuilder-view-form', 'action': ['FormTemplateController@validate', form.id], 'method': 'post'}) }}
+                    {% include 'form_template/preview' with {'allowed_onload' : 'true'} %}
+                    <p class="pull-right hidden-print form-group btn-toolbar">
+                        <button v-on="click: submitWithType('submitted', $event)" class="btn btn-info">Apstiprināt</button>
+                        <button v-on="click: submitWithType('draft', $event)" class="btn btn-success">Saglabāt</button>
+                        {% if home_controller is defined and home_controller == 'FormTemplateController' %}
+                            <a href="{{ url_action('FormTemplateController@edit', {'id':  form.id}) }}" class="btn btn-default" role="button">Atcelt</a>
+                        {% elseif home_controller is defined and home_controller != 'FormTemplateController' %}
+                            <a href="{{ url_action(home_controller) }}" class="btn btn-default" role="button">Atcelt</a>
+                        {% else %}
+                            {{ link_to_action(index_route, 'Atcelt', {}, {'class': 'btn btn-default', 'role': 'button'}) }}                                
+                        {% endif %}
+                    </p>
+                    {{ form_close() }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

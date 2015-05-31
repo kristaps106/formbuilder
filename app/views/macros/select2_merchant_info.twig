@@ -1,0 +1,6 @@
+{% macro select2_merchant_info(data, is_json = false) %}
+        {%- set merchantInfo = getMerchantInfo(data, is_json) -%}
+        {%- for id, options in merchantInfo -%}
+            <option value="{{ options.id }}"selected="selected">{{ options.name }}</option>
+        {%- endfor -%}
+{% endmacro %}

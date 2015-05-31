@@ -1,0 +1,28 @@
+{% extends 'layouts/sprk' %}
+
+{% block navigation %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="container" style="margin-top:30px">
+        <div class="col-md-4 col-md-offset-4" style="position:absolute;top:30%;left:50%;width:353px;height:477px;margin:-120px 0 0 -190px">
+            <div class="text-center" style="margin-bottom: 20px;">
+                <a href="/">
+                    <img src="/assets/images/logo-small.png" alt="logo" id="SPRK-logo" />
+                </a>
+            </div>
+            <div class="alert alert-danger text-center" role="alert">
+                {% if message is defined %}
+                    {{ message }}
+                {% else %}
+                    Kļūda!
+                {% endif %}
+            </div>
+            <p class="text-center">
+                <a href="{{ url_previous() }}">Atpakaļ</a>
+            </p>
+        </div>
+    </div>
+
+{% endblock %}

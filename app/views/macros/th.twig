@@ -1,0 +1,12 @@
+{% macro th(key, title, sortable = true, colspan = false) %}
+    {% if(sortable) %}
+        <th {% if(colspan) %}colspan="{{ colspan }}"{% endif %} v-on="click:sortBy('{{ key }}')"class="sort-col" v-class="(sortKey == '{{ key }}') ? 'active-col' : '' ">
+           {{ title|default('')}}
+            <span v-if="(sortKey && sortKey == '{{ key }}')" class="arrow"
+                v-class="(sortKey == '{{ key }}' && reversed.{{ key }}) ? 'dsc' : 'asc'">
+            </span>
+        </th>
+    {% else %}
+        <th> {{ title|default('')}}</th>
+    {% endif %}
+{% endmacro %}

@@ -1,0 +1,77 @@
+{% extends 'layouts/sprk' %}
+{% block stylesheet %}
+    {{ css(asset_timed('assets/stylesheets/table_fix.css'))|raw }}
+{% endblock %}  
+{% block content %}
+
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header">
+                {% if form.name is defined  %}
+                    {{ form.name }}
+                {% elseif form_post_form.name is defined %}
+                    {{ form_post_form.name }}
+                {% endif %}
+            </h1>
+        </div>
+    </div>
+    {% if (session_has('message')) %}
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="alert alert-success">
+                    {{ session_get('message') }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if (session_has('error')) %}
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="alert alert-danger">
+                    {{ session_get('error') }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="clearfix"></div>
+                    {{ form_open({'id': 'form-calx', 'v-component': 'formbuilder-view-form', 'action': action_route, 'v-form-status': (form.status is defined ? form.status : false), 'method': 'post'}) }}
+                        {% if form.id is defined  %}
+                            <span v-form-id="{{form.id}}"></span>
+                        {% endif %}
+                        {% include 'form_template/preview' %}
+                        <p class="pull-right hidden-print form-group btn-toolbar">           
+                            {% if (form.status is defined and form.status == 'draft') or (form.status is not defined) %}
+                                <button v-on="click: submitWithType('submitted', $event)" class="btn btn-success allowed-onload">{% if (has_rejected_fp is defined and has_rejected_fp == true)%}Iesniegt atkārtoti{% else %}Iesniegt{% endif %}</button>
+                                <button v-on="click: submitWithType('draft', $event)" class="btn btn-info allowed-onload">Saglabāt</button>
+                                <button v-on="click: submitWithType('confirmed', $event)" class="btn btn-success" id="confirm_btn">Apstiprināt</button>
+                                {{ link_to_action(index_route, 'Aizvērt', {}, {'class': 'btn btn-default', 'role': 'button'}) }}
+                            {% elseif (form.status is defined and form.status == 'rejected') %}
+                                {% if (form.status is defined and form.status == 'rejected') %}
+                                    <button v-on="click: submitWithType('re-submitted', $event)" class="btn btn-success allowed-onload">Iesniegt atkārtoti</button>
+                                {% endif %}
+                                <button v-on="click: submitWithType('rejection-draft', $event)" class="btn btn-info allowed-onload">Saglabāt</button>
+                                {{ link_to_action(index_route, 'Aizvērt', {}, {'class': 'btn btn-default', 'role': 'button'}) }}
+                            {% elseif (form.status is defined and form.status == 'submitted' or form.status == 're-submitted') %}
+                                {% if (form.status is not defined) or ( (confirm_bn is defined and confirm_bn) or confirm_bn is not defined ) %}
+                                    <button v-on="click: submitWithType('confirmed', $event)" class="btn btn-success allowed-onload" id="confirm_btn">Apstiprināt</button>
+                                {% endif %}
+                                <button v-on="click: submitWithType('reject', $event)" class="btn btn-warning allowed-onload">Noraidīt</button>
+                                {{ link_to_action(index_route, 'Aizvērt', {}, {'class': 'btn btn-default', 'role': 'button'}) }}
+                            {% else %}
+                                {{ link_to_action(index_route, 'Aizvērt', {}, {'class': 'btn btn-default allowed-onload', 'role': 'button'}) }}
+                            {% endif %}
+                        </p>
+                         <div class="clearfix"></div>
+                         {% include 'form/modal/rejection' %}
+                    {{ form_close() }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

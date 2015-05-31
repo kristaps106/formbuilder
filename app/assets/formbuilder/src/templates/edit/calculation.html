@@ -1,0 +1,20 @@
+<div class="field-group">
+    <div class='fb-edit-section-header'>Lauka identifikators (drīkst sastāvēt [a..z][0..9] un nedrīkst sākties ar ciparu!)</div>
+    <input id="alphaNumericIdentity" type="text" data-rv-input="model.<%= Formbuilder.options.mappings.IDENTITY %>" />
+    <div class='fb-edit-section-header'>Formula</div>
+    <input type="text" data-rv-input="model.<%= Formbuilder.options.mappings.FORMULA %>" />
+    <div class='fb-edit-section-header'>Formāts</div>
+    <input type="text" data-rv-input="model.<%= Formbuilder.options.mappings.FORMAT %>" />
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        $('#alphaNumericIdentity').bind('keyup blur', function() {
+            if ($(this).val().length == 1) {
+                $(this).val($(this).val().replace(/[^A-Za-z]/g, '').toUpperCase());
+            } else {
+                $(this).val($(this).val().replace(/[^A-Za-z0-9]/g, '').toUpperCase());
+            }
+        });
+    });
+</script>

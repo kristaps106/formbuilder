@@ -1,0 +1,13 @@
+{% macro dropdown(options, name, selectize = false, filter = true, selected = false) %}
+    {% if selectize == true %}
+        <div class="form-group dk-content">
+    {% endif %}        
+            <select {% if filter == true %}v-on="change:filterBy($event)"{% endif %} class="form-control" name="{{ name }}">
+                {% for key, val in options %}
+                    <option value="{{ key }}" {% if selected and selected == key %} selected{% endif %} >{{ val }}</option>
+                {% endfor %}
+            </select>
+    {% if selectize == true %}            
+        </div>
+    {% endif %}
+{% endmacro %}

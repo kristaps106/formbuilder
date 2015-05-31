@@ -1,0 +1,44 @@
+{% macro classifierTree(crumbs, rootClassifier, activeClassifier, activeTree, showHeading = true, showLinks = true ) %}
+    {% if (rootClassifier.parent > 0) %}
+        {% if showHeading %}
+        <h3>Hierarhiskais skats</h3>
+        {% endif %}
+
+        <ul class="list-unstyled">
+            {% for node in crumbs %}
+
+                {% if node.getLevel() < 1 or node.getId in activeTree %}
+                    {% set hide = false %}
+                {% else %}
+                    {% set hide = true %}
+                {% endif %}
+
+                {# Ja līmenis augstāks kā iepriekšējam elementam, taisam ul ciet tik, cik dziļš līmenis bijis #}
+                {% if node.closeUl is defined %}
+                    {% for i in 0..node.closeUl %}
+                       </ul>
+                    </li>
+                    {% endfor %}
+                {% endif %}
+
+                <li class="level-{{ node.getLevel()}} ">
+                    {% if node.hasActiveChildren is defined and node.hasActiveChildren is not empty %}<span class="moreTree"> <i class="glyphicon glyphicon-plus"></i> </span>{% endif %}
+                    {% if showLinks %}
+                    <a href="/klasifikatori/{{ node.getId|e }}" class="{% if node.getId == activeClassifier %} active{% endif%}">
+                    {% endif %}
+                        {{ node }}
+                    {% if showLinks %}
+                    </a>
+                    {% endif %}
+
+                {# Ja ir berni, tad atveram jaunu ul. Ja nav bernu, aizveram li - node.hasChildren ir bug, ja dzēsti bērni, atgriež true! #}
+                {% if node.getChildren|length > 0 and node.hasActiveChildren is defined %}
+                    <ul class="list-unstyled subtree {% if hide %}hideSubtree{% endif %}" >
+                {% else %}
+                    </li>
+                {% endif %}
+
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endmacro %}
